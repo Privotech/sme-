@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Product {
+  id             String          @id @default(uuid())
+  name           String
+  sku            String          @unique
+  barcode        String?
+  category       String          @default("General")
+  unit           String          @default("pcs")
+  costPrice      Float           @default(0.0)
+  sellingPrice   Float           @default(0.0)
+  stock          Int             @default(0)
+  minStockAlert  Int             @default(5)
+  description    String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  saleItems      SaleItem[]
+  stockMovements StockMovement[]
+}
+
+model StockMovement {
+  id            String   @id @default(uuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type          String   // RESTOCK, SALE, ADJUSTMENT, DAMAGE, RETURN
+  quantity      Int
+  previousStock Int
+  newStock      Int
+  unitCost      Float?
+  note          String?
+  createdAt     DateTime @default(now())
+}
+
+model Customer {
+  id          String            @id @default(uuid())
+  name        String
+  phone       String?
+  email       String?
+  address     String?
+  totalDebt   Float             @default(0.0)
+  totalSpent  Float             @default(0.0)
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  sales       Sale[]
+  payments    CustomerPayment[]
+}
+
+model Sale {
+  id            String     @id @default(uuid())
+  invoiceNumber String     @unique
+  customerId    String?
+  customer      Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  subtotal      Float
+  discount      Float      @default(0.0)
+  tax           Float      @default(0.0)
+  total         Float
+  paidAmount    Float
+  balanceDue    Float      @default(0.0)
+  paymentMethod String     @default("CASH") // CASH, CARD, TRANSFER, CREDIT, SPLIT
+  status        String     @default("COMPLETED") // COMPLETED, PARTIAL, CREDIT, CANCELLED
+  notes         String?
+  createdAt     DateTime   @default(now())
+  items         SaleItem[]
+}
+
+model SaleItem {
+  id          String   @id @default(uuid())
+  saleId      String
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String
+  quantity    Int
+  unitCost    Float    @default(0.0)
+  unitPrice   Float
+  subtotal    Float
+}
+
+model Expense {
+  id              String   @id @default(uuid())
+  title           String
+  category        String   @default("OTHER") // RENT, UTILITIES, SALARIES, SUPPLIES, MARKETING, TRANSPORT, EQUIPMENT, OTHER
+  amount          Float
+  date            DateTime @default(now())
+  paymentMethod   String   @default("CASH")
+  referenceNumber String?
+  notes           String?
+  createdAt       DateTime @default(now())
+}
+
+model CustomerPayment {
+  id              String   @id @default(uuid())
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  amount          Float
+  paymentMethod   String   @default("CASH")
+  referenceNumber String?
+  note            String?
+  createdAt       DateTime @default(now())
+}
+
+model BusinessSetting {
+  id                 String   @id @default("default")
+  businessName       String   @default("My Business Store")
+  phone              String   @default("+1 (555) 019-2834")
+  email              String   @default("contact@mybusiness.com")
+  address            String   @default("14 Market Street, Suite B")
+  currencySymbol     String   @default("$")
+  currencyCode       String   @default("USD")
+  taxRate            Float    @default(0.0)
+  enableTax          Boolean  @default(false)
+  receiptFooter      String   @default("Thank you for your patronage! Please come again.")
+  lowStockThreshold  Int      @default(5)
+  updatedAt          DateTime @updatedAt
+}

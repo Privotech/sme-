@@ -1,0 +1,6 @@
+{
+  "name": "SME Business Manager",
+  "description": "Comprehensive operations manager for small and micro businesses to track sales, point-of-sale (POS), inventory stock alerts, operating expenses, and customer credit ledger.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
